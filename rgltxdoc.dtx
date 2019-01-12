@@ -22,7 +22,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{rgltxdoc}
 %<*package>
-    [2019/01/05 v1 Common documentation code used for Richard Grewe's packages]
+    [2019/01/12 v1.1 Common documentation code used for Richard Grewe's packages]
 %</package>
 %
 %<*driver>
@@ -105,8 +105,11 @@
 %
 % \section{Documentation Input}
 %
-% The documentation is expected to be written in UTF-8 and in US-english
-% language.
+% The documentation is expected to be written in UTF-8 and in US-English
+% language. If \pkgname{babel} is already loaded, it will not be loaded
+% again, though. This is to support packages that use other languages
+% than English in examples and load \pkgname{babel} accordingly.
+% \changes{v1.1}{2019/01/12}{load babel only if not yet loaded}
 %    \begin{macrocode}
 \ifbool{luatex}{
   \RequirePackage[utf8]{luainputenc}
@@ -114,7 +117,8 @@
   \setmainlanguage[variant=american]{english}
 }{
   \RequirePackage[utf8]{inputenc}
-  \RequirePackage[english]{babel}
+  \@ifpackageloaded{babel}{}
+    {\RequirePackage[english]{babel}}
 }
 %    \end{macrocode}
 %
@@ -172,7 +176,7 @@
 % We simplify quoting names through the \pkgname{csquotes} package and
 % register |"| to produce double opening/closing quotation marks.
 %    \begin{macrocode}
-\RequirePackage{csquotes}
+\RequirePackage[autostyle=true]{csquotes}
 \MakeOuterQuote{"}
 %    \end{macrocode}
 %
@@ -184,7 +188,7 @@
 % in documentation and visually improve the index through a two-column
 % layout.
 %    \begin{macrocode}
-\RequirePackage{enumitem}
+\RequirePackage[inline]{enumitem}
 \RequirePackage[columns=2]{idxlayout}
 %    \end{macrocode}
 %
@@ -658,6 +662,14 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+%
+% \section{Future Work}
+%
+% \begin{itemize}
+% \item Add keys, as listed in |KeyDesc| tables to the index
+%   automatically.
+% \end{itemize}
+%
 %\iffalse
 %</package>
 %\fi
