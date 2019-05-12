@@ -2,7 +2,7 @@
 %
 % Copyright (C) 2018-2019 by Richard Grewe <r-g+tex@posteo.net>
 % -------------------------------------------------------
-% 
+%
 % This file may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.2
 % of this license or (at your option) any later version.
@@ -10,7 +10,7 @@
 %
 %    http://www.latex-project.org/lppl.txt
 %
-% and version 1.2 or later is part of all distributions of LaTeX 
+% and version 1.2 or later is part of all distributions of LaTeX
 % version 1999/12/01 or later.
 %
 % \fi
@@ -22,7 +22,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{rgltxdoc}
 %<*package>
-    [2019/01/12 v1.1 Common documentation code used for Richard Grewe's packages]
+    [2019/05/04 v1.2 Common documentation code used for Richard Grewe's packages]
 %</package>
 %
 %<*driver>
@@ -264,10 +264,20 @@
 % \vref{sec:KeysValues:impl}.
 %
 % \NiceDescribeMacros{2}
-%   {\NiceDescribeCounte}{\oarg{idx}\marg{counter}\marg{qualifiers}}
+%   {\NiceDescribeCounter}{\oarg{idx}\marg{counter}\marg{qualifiers}}
 %   {\NiceDescribeCounters}{\marg{n}\oarg{idx$_1$}\marg{ctr$_1$}\marg{qual$_1$}\ldots\oarg{idx$_n$}\marg{ctr$_n$}\marg{qual$_n$}}
 % These macros are analogous to the above macros, but aimed for
 % documenting \hologo{LaTeX} counters.
+%
+% \NiceDescribeMacros{2}
+%   {\NiceDescribeKey}{\oarg{idx}\marg{keyname}\marg{keyconfig}}
+%   {\NiceDescribeKeys}{\marg{n}\oarg{idx$_1$}\marg{name$_1$}\marg{cfg$_1$}\ldots\oarg{idx$_n$}\marg{name$_n$}\marg{cfg$_n$}}
+% These macros are for documenting option keys, for instances of
+% packages \pkgname{xkeyval} or \pkgname{pgfkeys}.
+% The \meta{keyconfig} is a key-value list in which the keys "vals",
+% "init", and "def" can be used to specify the range of
+% expected/permitted values, the initial (preset) value, and the default
+% (if the key is provided without a value).
 %
 % \NiceDescribeMacro{\NewNiceDescription}{\marg{type}\marg{efmt}\marg{afmt}\marg{icmd}}
 % This macro is used internally for defining the above macros and can be
@@ -293,7 +303,7 @@
 % \end{KeyValTable}
 % A usage example for |\NewNiceDescription| can be found in the
 % implementation below.
-% 
+%
 %
 % \paragraph{Implementation}
 %
@@ -354,17 +364,67 @@
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
+% \begin{macro}{\NiceDescribeKey}
+% \begin{macro}{\NiceDescribeKeys}
+% Option-key names are formatted as is. Arguments are split into the range
+% of values (|vals|), the initial value (|init|), and the default value
+% (|def| -- the value used when only the key but no value is specified
+% to the key). These three can be set as keys.  The index entry is
+% produced through |\SpecialOtherIndex| (see its documentation below).
+% \changes{v1.2}{2019/05/04}{macros added}
+%    \begin{macrocode}
+\NewNiceDescription{Key}{#1\,\textrm{=}\,\null}
+  {\begingroup
+   \newcommand\vmeta[1]{{\normalfont\meta{##1}}}%
+   \setkeys[rgltxdoc]{DescOpt}{#1}%
+   \setbox\z@\hbox{\qquad\let\rgltxdoc@@sep\@empty
+     \rgltxdoc@opt{default}{\cmdrgltxdoc@DescOpt@def}%
+     \rgltxdoc@opt{initially}{\cmdrgltxdoc@DescOpt@init}}%
+   \parbox[t]{\linewidth-\wd\z@}{%
+     \raggedright\cmdrgltxdoc@DescOpt@vals}%
+   \box\z@\endgroup}
+  {\SpecialOtherIndex{option-key}{option-keys}}
+\usepackage{xkeyval,calc}
+\define@key[rgltxdoc]{DescOpt}{vals}{%
+  \def\cmdrgltxdoc@DescOpt@vals{}\let\rgltxdoc@@sep\@empty%
+  \def\do##1{%
+    \protected@eappto\cmdrgltxdoc@DescOpt@vals{\rgltxdoc@@sep\texttt{##1}}%
+    \def\rgltxdoc@@sep{, }}%
+  \docsvlist{#1}}
+\define@cmdkey[rgltxdoc]{DescOpt}{init}{}
+\define@cmdkey[rgltxdoc]{DescOpt}{def}{}
+\newcommand\rgltxdoc@opt[2]{\ifdef{#2}
+  {\rgltxdoc@@sep\textsl{#1: }\texttt{#2}%
+   \def\rgltxdoc@@sep{, }}
+  {}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
 % \begin{macro}{\SpecialOtherIndex}
 % The |\SpecialOtherIndex|\marg{type}\marg{types}\marg{name} macro
 % adds an index entry of the given \meta{type} (with plural form
 % \meta{types}) and given \meta{name}.
-% The macro is a straightforward generalization of |\SpecialEnvIndex|.
+% The macro is a straightforward generalization of |\SpecialEnvIndex|
+% (both from \pkgname{hypdoc} and from \pkgname{doc}).
+% \changes{v1.2}{2019/05/04}{enabled \pkgname{hypdoc} support}
 %    \begin{macrocode}
-\newcommand\SpecialOtherIndex[3]{\@bsphack
+\newcommand*\SpecialOtherIndex[3]{%
+  \@bsphack
+  \begingroup
+    \HD@target
+    \let\HDorg@encapchar\encapchar
+    \edef\encapchar usage{%
+      \HDorg@encapchar hdclindex{\the\c@HD@hypercount}{usage}%
+    }%
+    \rgltxdoc@nohyp@SpecialOtherIndex{#1}{#2}{#3}%
+  \endgroup
+  \@esphack}
+\newcommand\rgltxdoc@nohyp@SpecialOtherIndex[3]{%
   \index{#3\actualchar{\protect\ttfamily#3}
     (#1)\encapchar usage}%
   \index{#2:\levelchar#3\actualchar
-    {\protect\ttfamily#3}\encapchar usage}\@esphack}
+    {\protect\ttfamily#3}\encapchar usage}}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -397,13 +457,12 @@
 % The following code creates the "margin" text (more precisely, a box to
 % the left of the text) and the \meta{args} next to it.
 %    \begin{macrocode}
-  \leavevmode\null\hbox to\z@{\hss%
-    \pbox[t]{3\marginparwidth}{\ttfamily #1{#6}}%
+  \rgltxdoc@inmargin{\ttfamily #1{#6}}%
 %    \end{macrocode}
 % If there is no \meta{args}, then the margin part is moved towards the
 % left by a |\quad|.
 %    \begin{macrocode}
-    \ifstrempty{#7}{\quad}{}}%
+    {\ifstrempty{#7}{\quad}{}}%
   #2{#7}\relax
 %    \end{macrocode}
 % Next, the index entries are created, through the comma-separated
@@ -427,6 +486,19 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\rgltxdoc@inmargin}
+% The |\rgltxdoc@inmargin|\marg{text}\marg{spacing} macro puts
+% \meta{text} into the margin of a newly started paragraph and uses
+% \meta{spacing} to put additional horizontal spacing between
+% \meta{text} and the left side of the paragraph.
+%    \begin{macrocode}
+\newcommand\rgltxdoc@inmargin[2]{%
+  \leavevmode\null\hbox to\z@{\hss%
+    \pbox[t]{3\marginparwidth}{#1}%
+    #2}}
+%    \end{macrocode}
+% \end{macro}
+%
 %
 % \subsection{Arguments, Keys, and Values}
 %
@@ -443,12 +515,12 @@
 % \NiceDescribeEnv{KeyValTable}{\cmarg{ValDesc}}
 % This table is used for describing special values (constants). It has
 % two columns, |val| and |desc|, with their obvious meaning.
-% 
+%
 % \NiceDescribeEnv{KeyValTable}{\cmarg{ArgDesc}}
 % This table is used for describing arguments of macros and environments
 % in a structured fashion. It has two columns, |arg| and |desc|.
-% Examples of this kind of table can be found in \cref{sec:MacrosEnvs}. 
-% 
+% Examples of this kind of table can be found in \cref{sec:MacrosEnvs}.
+%
 % \paragraph{Implementation}\label{sec:KeysValues:impl}
 %
 % The \pkgname{keyvaltable} package is used for creating the tables that
@@ -488,7 +560,7 @@
 % \end{macro}
 %
 % \begin{macro}{\pkgname}
-% The |\pkgname|\meta{package-name} macro typesets package names in a
+% The |\pkgname|\marg{package-name} macro typesets package names in a
 % uniform font (sans-serif). Moreover, the package checks whether the
 % package actually exists, in order to identify embarrassing typos in
 % the package name.
@@ -497,6 +569,16 @@
   \IfFileExists{#1.sty}
     {\textsf{#1}}
     {\rgltxdoc@err{Package `#1' not found. Spelling?}}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\pkgnames}
+% The |\pkgnames|\marg{package-names} macro typesets a comma-separated
+% list of package names.
+% \changes{v1.2}{2019/05/04}{macro added}
+%    \begin{macrocode}
+\newcommand\pkgnames{%
+  \def\do##1{\pkgname{##1}\def\do####1{, \pkgname{####1}}}%
+  \docsvlist}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -630,8 +712,12 @@
 % |\rgltxdoc@RestoreSecs| macro restores the values of the section
 % counters. This allows one to use sectioning commands in code examples
 % without interfering with the section numbering in the documentation.
+% The |\rgltxdoc@SaveSecs| macro additionally disables the TOC macro,
+% such that example sections do not appear in the documentation's TOC.
+% \changes{v1.2}{2019/05/04}{disabled contents lines}
 %    \begin{macrocode}
 \newcommand\rgltxdoc@SaveSecs{%
+  \def\addcontentsline##1##2##3{}%
   \@for\SC:=chapter,section,subsection,subsubsection\do{%
     \@ifundefined{c@\SC}{}
       {\csedef{rgltx@@ctr@\SC}{\the\value{\SC}}%
