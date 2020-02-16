@@ -22,7 +22,7 @@
 %<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
 %<package>\ProvidesPackage{rgltxdoc}
 %<*package>
-    [2019/05/04 v1.2 Common documentation code used for Richard Grewe's packages]
+    [2019/12/21 v1.3 Common documentation code used for Richard Grewe's packages]
 %</package>
 %
 %<*driver>
@@ -190,6 +190,14 @@
 %    \begin{macrocode}
 \RequirePackage[inline]{enumitem}
 \RequirePackage[columns=2]{idxlayout}
+%    \end{macrocode}
+%
+% The \pkgname{cleveref} package now requires \pkgname{amsmath} to be
+% loaded before. We actually do not need \pkgname{amsmath}, but it also
+% should not harm to load it nonetheless to avoid that
+% \pkgname{rgltxdoc} now has to be loaded after \pkgname{amsmath}.
+%    \begin{macrocode}
+\RequirePackage{amsmath}
 %    \end{macrocode}
 %
 % The \pkgname{cleveref} and \pkgname{varioref} packages shall be used
